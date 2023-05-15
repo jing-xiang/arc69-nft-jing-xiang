@@ -2,6 +2,11 @@ import { useWallet } from "@txnlab/use-wallet";
 import { useState } from "react";
 import { getAlgodClient } from "../clients";
 import Button from "./Button";
+import algosdk from "algosdk";
+import NftItem from "./NftItem";
+import NftList from "./NftList";
+import { createAssetTransferTxn, } from "../algorand/index";
+import { SERVER_FILES_MANIFEST } from "next/dist/shared/lib/constants";
 
 const network = process.env.NEXT_PUBLIC_NETWORK || "SandNet";
 const algod = getAlgodClient(network);
@@ -11,12 +16,30 @@ export default function TransferNFTForm({ nfts }) {
   const [receiver, setReceiver] = useState("");
   const [nft, setNft] = useState("");
   const [txnref, setTxnRef] = useState("");
+  const handleChange = (event) => {
+    setNft(event.target.value);
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
     // write your code here
+    console.log(nft)
+    let nfttxn = [await createAssetTransferTxn(process.env.NEXT_PUBLIC_DEPLOYER_ADDR, receiver, parseInt(nft), 1)];
+
+    // Group all transactions
+    const groupedTxn = algosdk.assignGroupID(nfttxn);
+
+    // Sign  
+    const encodedTxns = groupedTxn.map((txn) => algosdk.encodeUnsignedTransaction(txn));
+    const signedtxns = await signTransactions(encodedTxns);
+    const res = await sendTransactions(signedtxns, 4);
+    if (res){
+    setNft(() => {
+      return nfts.filter(nft => nft.asset["asset-id"] !== nft);
+    })
+  }
   };
+  
 
   return (
     <div className="w-full">
@@ -26,14 +49,14 @@ export default function TransferNFTForm({ nfts }) {
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="to">
             Select NFT to transfer
           </label>
-          <select value={nft} onChange={setNft}>
+          <select value={nft} onChange={(e) => setNft(parseInt(e.target.value))} className="text-dark">
             {nfts.map((n, index) => (
               <option key={index} value={n.asset["asset-id"]}>
-                NFT1
+                {n.asset["asset-id"]}
               </option>
             ))}
           </select>
-        </div>
+        </div>  
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="to">
             To

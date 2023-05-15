@@ -1,4 +1,6 @@
 import algosdk from "algosdk";
+import * as dotenv from "dotenv";
+dotenv.config({ path: "./.env.local" });
 
 const getNetworkCredentials = (network) => {
     let algod_token = process.env.NEXT_PUBLIC_ALGOD_TOKEN;
@@ -47,7 +49,7 @@ const getNetworkCredentials = (network) => {
         default:
             break;
     }
-
+    console.log(algod_address);
     return {
         algod: {
             token: algod_token,
@@ -68,8 +70,9 @@ const getNetworkCredentials = (network) => {
 };
 
 const getAlgodClient = (network) => {
+    console.log(network);
     const { algod } = getNetworkCredentials(network);
-
+    console.log(algod);
     if (algod.token === undefined || algod.address === undefined || algod.port === undefined) {
         throw new Error("Invalid Algod Credentials!");
     }
@@ -94,6 +97,7 @@ const getKmdClient = (network) => {
 
     return kmdClient;
 };
+
 
 const getIndexerClient = (network) => {
     const { indexer } = getNetworkCredentials(network);
