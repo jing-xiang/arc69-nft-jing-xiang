@@ -33,6 +33,7 @@ export default function TransferNFTForm({ nfts }) {
     const encodedTxns = groupedTxn.map((txn) => algosdk.encodeUnsignedTransaction(txn));
     const signedtxns = await signTransactions(encodedTxns);
     const res = await sendTransactions(signedtxns, 4);
+    //refresh list
     if (res){
     setNft(() => {
       return nfts.filter(nft => nft.asset["asset-id"] !== nft);
@@ -49,7 +50,7 @@ export default function TransferNFTForm({ nfts }) {
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="to">
             Select NFT to transfer
           </label>
-          <select value={nft} onChange={(e) => setNft(parseInt(e.target.value))} className="text-dark">
+          <select value={nft} onChange={(e) => setNft(parseInt(e.target.value))} className="block text-gray-700 text-sm font-bold mb-2">
             {nfts.map((n, index) => (
               <option key={index} value={n.asset["asset-id"]}>
                 {n.asset["asset-id"]}

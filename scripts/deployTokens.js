@@ -7,7 +7,6 @@ const network = process.env.NEXT_PUBLIC_NETWORK || "SandNet";
 const algodClient = getAlgodClient(network);
 
 // get seller and buyer accounts
-
 const buyer = algosdk.mnemonicToSecretKey(process.env.NEXT_PUBLIC_BUYER_MNEMONIC);
 const deployer = algosdk.mnemonicToSecretKey(process.env.NEXT_PUBLIC_DEPLOYER_MNEMONIC);
 const seller = deployer;
@@ -87,8 +86,6 @@ const createAsset = async (maker) => {
 };
 
 (async () => {
-  
-
   //fund accounts
   console.log("Funding accounts...");
   await sendAlgos(deployer, buyer, 1e6); // 1 Algo
@@ -127,9 +124,7 @@ await submitToNetwork(signedoptintxn);
   let signedTransferTxn = transferTxn.signTxn(seller.sk);
   await submitToNetwork(signedTransferTxn);
 
-
-
-  // Check your work
+// Check
 console.log("Receiver assets: ", (await algodClient.accountInformation(seller.addr).do()).assets);
 console.log("New recipient assets: ", (await algodClient.accountInformation(buyer.addr).do()).assets);
 console.log(assetId);

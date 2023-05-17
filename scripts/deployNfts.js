@@ -9,12 +9,9 @@ import * as algotxns from "../src/algorand/index.js";
 import { getAlgodClient } from "../src/clients/index.js";
 import algosdk from "algosdk";
 
-
 const pinata = pinataSDK(process.env.PINATA_API_KEY, process.env.PINATA_API_SECRET);
-
 const network = process.env.NEXT_PUBLIC_NETWORK || "SandNet";
 const algodClient = getAlgodClient(network);
-
 
 // get creator account
 const deployer = algosdk.mnemonicToSecretKey(process.env.NEXT_PUBLIC_DEPLOYER_MNEMONIC);
@@ -42,7 +39,7 @@ const deployer = algosdk.mnemonicToSecretKey(process.env.NEXT_PUBLIC_DEPLOYER_MN
 
   const readableshibahash = fs.createReadStream(shibahash);
   const readablecorgihash = fs.createReadStream(corgihash);
-
+  //pin
   await pinata.pinFileToIPFS(readableshibahash).then((result) => {
     //handle results here
     console.log(result);
@@ -61,9 +58,6 @@ const deployer = algosdk.mnemonicToSecretKey(process.env.NEXT_PUBLIC_DEPLOYER_MN
     console.log(err);
   });
 
-
-
-
   const assets = fs.readdirSync(sourcePath).map((file, index) => {
     const asset = {
       index: index + 1, // 1-based index
@@ -76,10 +70,6 @@ const deployer = algosdk.mnemonicToSecretKey(process.env.NEXT_PUBLIC_DEPLOYER_MN
     return asset;
   });
   console.log(assets);
-
-
-
-
 
   // prepare to deploy assets
   await Promise.all(
@@ -105,13 +95,6 @@ const deployer = algosdk.mnemonicToSecretKey(process.env.NEXT_PUBLIC_DEPLOYER_MN
 
       const resultMeta = await pinata.pinJSONToIPFS(metadata, jsonOptions);
       console.log("JSON Metadata pinned: ", resultMeta);
-
-      // // ARC69 type
-      // const preparedAsset = {
-      //   name: asset.name,
-      //   url: `ipfs://${resultMeta.IpfsHash}#i`,//Specify mimetype in asset url.
-      //   type: "arc69",
-      // };
 
       // deploy asset
       var JSONtoarray = function(json){

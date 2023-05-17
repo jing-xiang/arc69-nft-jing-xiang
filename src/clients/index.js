@@ -49,7 +49,7 @@ const getNetworkCredentials = (network) => {
         default:
             break;
     }
-    console.log(algod_address);
+    
     return {
         algod: {
             token: algod_token,
@@ -70,9 +70,7 @@ const getNetworkCredentials = (network) => {
 };
 
 const getAlgodClient = (network) => {
-    console.log(network);
     const { algod } = getNetworkCredentials(network);
-    console.log(algod);
     if (algod.token === undefined || algod.address === undefined || algod.port === undefined) {
         throw new Error("Invalid Algod Credentials!");
     }

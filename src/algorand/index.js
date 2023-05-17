@@ -5,7 +5,6 @@ const network = process.env.NEXT_PUBLIC_NETWORK || "SandNet";
 const algodClient = getAlgodClient(network);
 
 
-// Write functions to do the following,
 const getPaymentTxn = async (algodClient, from, to, amount) => {
   const suggestedParams = await algodClient.getTransactionParams().do();
 
@@ -84,7 +83,6 @@ const fetchNFTs = async (algodClient) => {
       const acfg_txns = assetTxns.transactions
         .filter((txn) => txn["tx-type"] === "acfg")
         .forEach((txns) => {
-          //console.log(txns.note);
           if (txns.note != undefined) {
             try {
               note = base64ToJson(txns.note);
@@ -93,8 +91,7 @@ const fetchNFTs = async (algodClient) => {
             }
           }
         });
-       // console.log("acfg_txns", acfg_txns);
-//console.log(note);
+       
       const assetInfo = await algodClient.getAssetByID(asset["asset-id"]).do();
       const { decimals, total, url } = assetInfo.params;
 
@@ -160,8 +157,6 @@ const createAssetTransferTxn = async (sender, receiver, assetId, amount) => {
 
 const getNFTFromDeployer = async (algodClient, accAddr, assetId) => {
   const suggestedParams = await algodClient.getTransactionParams().do();
-
-  // for demo purposes, never expose mnemonic in frontend to sign txns
   const deployer = algosdk.mnemonicToSecretKey(process.env.NEXT_PUBLIC_DEPLOYER_MNEMONIC);
 
   // asset transfer
