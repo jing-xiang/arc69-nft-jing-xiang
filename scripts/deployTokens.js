@@ -2,6 +2,7 @@ import * as dotenv from "dotenv";
 dotenv.config({ path: "./.env.local" });
 import { getAlgodClient } from "../src/clients/index.js";
 import algosdk from "algosdk";
+import { signAndSubmit } from "../src/algorand/index.js";
 
 const network = process.env.NEXT_PUBLIC_NETWORK || "SandNet";
 const algodClient = getAlgodClient(network);
@@ -10,25 +11,6 @@ const algodClient = getAlgodClient(network);
 const buyer = algosdk.mnemonicToSecretKey(process.env.NEXT_PUBLIC_BUYER_MNEMONIC);
 const deployer = algosdk.mnemonicToSecretKey(process.env.NEXT_PUBLIC_DEPLOYER_MNEMONIC);
 const seller = deployer;
-
-const submitToNetwork = async (signedTxn) => {
-  // send txn
-  let tx = await algodClient.sendRawTransaction(signedTxn).do();
-  console.log("Transaction : " + tx.txId);
-
-  // Wait for transaction to be confirmed
-  confirmedTxn = await algosdk.waitForConfirmation(algodClient, tx.txId, 4);
-
-  //Get the completed Transaction
-  console.log(
-    "Transaction " +
-      tx.txId +
-      " confirmed in round " +
-      confirmedTxn["confirmed-round"]
-  );
-
-  return confirmedTxn;
-};
 
 const sendAlgos = async (sender, receiver, amount) => {
   // create suggested parameters
@@ -43,10 +25,8 @@ const sendAlgos = async (sender, receiver, amount) => {
     suggestedParams
   );
 
-  // sign the transaction
-  const signedTxn = txn.signTxn(sender.sk);
-
-  const confirmedTxn = await submitToNetwork(signedTxn);
+  // sign the transaction and submit to network
+  console.log(await signAndSubmit(algodClient, [txn], sender));
 };
 
 const createAsset = async (maker) => {
@@ -54,7 +34,6 @@ const createAsset = async (maker) => {
   const decimals = 0; // units of this asset are whole-integer amounts
   const assetName = "Fungible Token"; //token asset name
   const unitName = "FT"; //token unit name
-  const url = "ipfs://cid";
   const metadata = undefined;
   const defaultFrozen = false; // whether accounts should be frozen by default
 
@@ -68,21 +47,25 @@ const createAsset = async (maker) => {
     decimals,
     assetName,
     unitName,
-    assetURL: url,
+    assetURL: "ipfs://cid",
     assetMetadataHash: metadata,
     defaultFrozen,
-    freeze: seller.addr,
-    manager: seller.addr,
-    clawback: seller.addr,
-    reserve: seller.addr,
+    freeze: undefined,
+    manager: undefined,
+    clawback: undefined,
+    reserve: undefined,
 
     suggestedParams,
   });
 
-  // sign the transaction
-  const signedTxn = txn.signTxn(maker.sk);
+  // sign the transaction and submit to network
+  // sign and submit the transaction
+  const { confirmation } = await signAndSubmit(algodClient, [txn], maker);
 
-  return await submitToNetwork(signedTxn);
+  // Extract the asset ID from the confirmation object
+  const assetId = confirmation['asset-index'];
+
+  return assetId;
 };
 
 (async () => {
@@ -92,8 +75,7 @@ const createAsset = async (maker) => {
   await sendAlgos(deployer, seller, 1e6); // 1 Algo
   const suggestedParams = await algodClient.getTransactionParams().do();
 // Create asset
-const res = await createAsset(seller);
-const assetId = res["asset-index"];
+const assetId = await createAsset(seller);
 
 console.log(`Opted in buyer account ${buyer.addr} to asset with ID: ${assetId}`);
 //buyer opts into asset
@@ -107,8 +89,7 @@ let optintxn = algosdk.makeAssetTransferTxnWithSuggestedParams(
   assetId,
   suggestedParams
 );
-let signedoptintxn = optintxn.signTxn(buyer.sk);
-await submitToNetwork(signedoptintxn);
+console.log(await signAndSubmit(algodClient, [optintxn], buyer));
 
   // Transfer 100 fungible tokens to your buyer account
   let transferTxn = algosdk.makeAssetTransferTxnWithSuggestedParams(
@@ -121,8 +102,7 @@ await submitToNetwork(signedoptintxn);
     assetId,
     suggestedParams
   );
-  let signedTransferTxn = transferTxn.signTxn(seller.sk);
-  await submitToNetwork(signedTransferTxn);
+  console.log(await signAndSubmit(algodClient, [transferTxn], seller));
 
 // Check
 console.log("Receiver assets: ", (await algodClient.accountInformation(seller.addr).do()).assets);
