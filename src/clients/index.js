@@ -1,12 +1,11 @@
 import algosdk from "algosdk";
-import * as dotenv from "dotenv";
-dotenv.config({ path: "./.env.local" });
+//import * as dotenv from "dotenv";
+//dotenv.config({ path: "./.env.local" });
 
 const getNetworkCredentials = (network) => {
     let algod_token = process.env.NEXT_PUBLIC_ALGOD_TOKEN;
     let algod_address = process.env.NEXT_PUBLIC_ALGOD_ADDRESS;
     let algod_port = process.env.NEXT_PUBLIC_ALGOD_PORT;
-
     let kmd_token = process.env.NEXT_PUBLIC_KMD_TOKEN;
     let kmd_address = process.env.NEXT_PUBLIC_KMD_SERVER;
     let kmd_port = process.env.NEXT_PUBLIC_KMD_PORT;

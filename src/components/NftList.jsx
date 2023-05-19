@@ -5,9 +5,9 @@ import { useWallet } from "@txnlab/use-wallet";
 import algosdk from "algosdk";
 import { createAssetTransferTxn, getAssetOptInTxn } from "@/algorand";
 
-
 const network = process.env.NEXT_PUBLIC_NETWORK || "SandNet";
 const algodClient = getAlgodClient(network);
+const FT_id = process.env.NEXT_PUBLIC_FT_ASSET_ID;
 
 function NftList({ nfts }) {
   const [txnref, setTxnRef] = useState("");
@@ -32,7 +32,7 @@ function NftList({ nfts }) {
     let transaction1 = await getAssetOptInTxn(algodClient, activeAddress, assetId);
 
     // Transaction - buyer sends FT to the seller
-    let transaction2 = await createAssetTransferTxn(activeAddress, process.env.NEXT_PUBLIC_DEPLOYER_ADDR, 211874146, 5); //TODO: update assetID for testnet
+    let transaction2 = await createAssetTransferTxn(algodClient, activeAddress, process.env.NEXT_PUBLIC_DEPLOYER_ADDR, parseInt(FT_id), 5); //TODO: update assetID for testing
     
 
     // Store all transactions
@@ -45,6 +45,9 @@ function NftList({ nfts }) {
     const encodedTxns = groupedTxn.map((txn) => algosdk.encodeUnsignedTransaction(txn));
     const signedtxns = await signTransactions(encodedTxns);
     const res = await sendTransactions(signedtxns, 2);
+    setTxnRef(res.txId);
+    setTxnUrl(getTxnRefUrl(res.txId));
+    
   };
 
   return (

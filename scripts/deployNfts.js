@@ -39,24 +39,27 @@ const deployer = algosdk.mnemonicToSecretKey(process.env.NEXT_PUBLIC_DEPLOYER_MN
 
   const readableshibahash = fs.createReadStream(shibahash);
   const readablecorgihash = fs.createReadStream(corgihash);
-  //pin
-  await pinata.pinFileToIPFS(readableshibahash).then((result) => {
-    //handle results here
-    console.log(result);
-    ipfshashes.push(result.IpfsHash);
-}).catch((err) => {
-    //handle error here
-    console.log(err);
-});
 
-  await pinata.pinFileToIPFS(readablecorgihash).then((result) => {
-    //handle results here
-    console.log(result);
-    ipfshashes.push(result.IpfsHash);
-  }).catch((err) => {
-    //handle error here
-    console.log(err);
-  });
+//pin
+const imageFiles = [readableshibahash, readablecorgihash]; // Add more files as needed
+
+await Promise.all(
+  imageFiles.map((file) =>
+    pinata
+      .pinFileToIPFS(file)
+      .then((result) => {
+        console.log(result);
+        ipfshashes.push(result.IpfsHash);
+        return result;
+      })
+      .catch((err) => {
+        console.log(err);
+        throw err;
+      })
+  )
+);
+
+// Use ipfshashes for asset deployment or any other processing
 
   const assets = fs.readdirSync(sourcePath).map((file, index) => {
     const asset = {
@@ -92,9 +95,6 @@ const deployer = algosdk.mnemonicToSecretKey(process.env.NEXT_PUBLIC_DEPLOYER_MN
           cidVersion: 0,
         },
       };
-
-      const resultMeta = await pinata.pinJSONToIPFS(metadata, jsonOptions);
-      console.log("JSON Metadata pinned: ", resultMeta);
 
       // deploy asset
       var JSONtoarray = function(json){

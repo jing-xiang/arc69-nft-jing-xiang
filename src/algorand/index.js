@@ -1,8 +1,9 @@
+import { getIndexerClient } from "../clients/index";
 import algosdk from "algosdk";
 import axios from "axios";
-import { getAlgodClient } from "../clients";
+// import { getAlgodClient } from "../clients";
 const network = process.env.NEXT_PUBLIC_NETWORK || "SandNet";
-const algodClient = getAlgodClient(network);
+// const algodClient = getAlgodClient(network);
 
 
 const getPaymentTxn = async (algodClient, from, to, amount) => {
@@ -61,25 +62,15 @@ const fetchNFTs = async (algodClient) => {
 
   let nfts = [];
 
-  var token = process.env.NEXT_PUBLIC_INDEXER_TOKEN_TESTNET;
-  var port = process.env.NEXT_PUBLIC_INDEXER_PORT_TESTNET;
-  var server = process.env.NEXT_PUBLIC_INDEXER_ADDRESS_TESTNET;
+  const indexer_client = getIndexerClient(network);
 
-  if (process.env.NEXT_PUBLIC_NETWORK === "SandNet") {
-    token = process.env.NEXT_PUBLIC_INDEXER_TOKEN;
-    server = process.env.NEXT_PUBLIC_INDEXER_SERVER;
-    port = process.env.NEXT_PUBLIC_INDEXER_PORT;
-  }
-
-  const indexer_client = new algosdk.Indexer(token, server, port);
   var note = undefined;
-  console.log(assets);
   if (assets) {
     for (let asset of assets) {
       const assetTxns = await indexer_client
         .lookupAssetTransactions(asset["asset-id"])
         .do();
-      console.log("assetTxns: ", assetTxns);
+      //console.log("assetTxns: ", assetTxns);
       const acfg_txns = assetTxns.transactions
         .filter((txn) => txn["tx-type"] === "acfg")
         .forEach((txns) => {
@@ -140,7 +131,7 @@ const getAssetOptInTxn = async (algodClient, accAddr, assetId) => {
   });
 };
 
-const createAssetTransferTxn = async (sender, receiver, assetId, amount) => {
+const createAssetTransferTxn = async (algodClient, sender, receiver, assetId, amount) => {
   // create suggested parameters
   const suggestedParams = await algodClient.getTransactionParams().do();
 
@@ -155,20 +146,4 @@ const createAssetTransferTxn = async (sender, receiver, assetId, amount) => {
   return txn;
 }
 
-const getNFTFromDeployer = async (algodClient, accAddr, assetId) => {
-  const suggestedParams = await algodClient.getTransactionParams().do();
-  const deployer = algosdk.mnemonicToSecretKey(process.env.NEXT_PUBLIC_DEPLOYER_MNEMONIC);
-
-  // asset transfer
-  const assetTransferTxn = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
-    from: deployer.addr,
-    to: accAddr,
-    assetIndex: assetId,
-    suggestedParams,
-    amount: 1,
-  });
-
-  return await signAndSubmit(algodClient, [assetTransferTxn], deployer);
-};
-
-export { getPaymentTxn, getCreateNftTxn, signAndSubmit, fetchNFTs, getAssetOptInTxn, getNFTFromDeployer, createAssetTransferTxn };
+export { getPaymentTxn, getCreateNftTxn, signAndSubmit, fetchNFTs, getAssetOptInTxn, createAssetTransferTxn };

@@ -6,10 +6,10 @@ import algosdk from "algosdk";
 import NftItem from "./NftItem";
 import NftList from "./NftList";
 import { createAssetTransferTxn, } from "../algorand/index";
-import { SERVER_FILES_MANIFEST } from "next/dist/shared/lib/constants";
+
 
 const network = process.env.NEXT_PUBLIC_NETWORK || "SandNet";
-const algod = getAlgodClient(network);
+const algodClient = getAlgodClient(network);
 
 export default function TransferNFTForm({ nfts }) {
   const { activeAddress, signTransactions, sendTransactions } = useWallet();
@@ -24,7 +24,7 @@ export default function TransferNFTForm({ nfts }) {
     event.preventDefault();
     // write your code here
     console.log(nft)
-    let nfttxn = [await createAssetTransferTxn(process.env.NEXT_PUBLIC_DEPLOYER_ADDR, receiver, parseInt(nft), 1)];
+    let nfttxn = [await createAssetTransferTxn(algodClient, process.env.NEXT_PUBLIC_DEPLOYER_ADDR, receiver, parseInt(nft), 1)];
 
     // Group all transactions
     const groupedTxn = algosdk.assignGroupID(nfttxn);
@@ -38,6 +38,8 @@ export default function TransferNFTForm({ nfts }) {
     setNft(() => {
       return nfts.filter(nft => nft.asset["asset-id"] !== nft);
     })
+    //display txn id
+    setTxnRef(res.txId);
   }
   };
   
